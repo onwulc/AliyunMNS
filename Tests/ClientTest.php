@@ -6,11 +6,14 @@ use AliyunMNS\Constants;
 use AliyunMNS\AsyncCallback;
 use AliyunMNS\Model\QueueAttributes;
 use AliyunMNS\Model\TopicAttributes;
+use AliyunMNS\Model\AccountAttributes;
 use AliyunMNS\Exception\MnsException;
 use AliyunMNS\Requests\CreateQueueRequest;
 use AliyunMNS\Requests\CreateTopicRequest;
 use AliyunMNS\Requests\ListQueueRequest;
 use AliyunMNS\Requests\ListTopicRequest;
+use AliyunMNS\Requests\SetAccountAttributesRequest;
+use AliyunMNS\Requests\GetAccountAttributesRequest;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
@@ -24,9 +27,11 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->accessId = "XXX";
-        $this->accessKey = "XXX";
-        $this->endPoint = "XXX";
+        $ini_array = parse_ini_file(__DIR__ . "/aliyun-mns.ini");
+
+        $this->endPoint = $ini_array["endpoint"];
+        $this->accessId = $ini_array["accessid"];
+        $this->accessKey = $ini_array["accesskey"];
 
         $this->queueToDelete = array();
         $this->topicToDelete = array();
@@ -49,6 +54,36 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                 $this->client->deleteTopic($topicName);
             } catch (\Exception $e) {
             }
+        }
+    }
+
+    public function testAccountAttributes()
+    {
+        try
+        {
+            $attributes = new AccountAttributes;
+            $attributes->setLoggingBucket("Test");
+            $this->client->setAccountAttributes($attributes);
+            $res = $this->client->getAccountAttributes();
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals("Test", $res->getAccountAttributes()->getLoggingBucket());
+
+            $attributes = new AccountAttributes;
+            $this->client->setAccountAttributes($attributes);
+            $res = $this->client->getAccountAttributes();
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals("Test", $res->getAccountAttributes()->getLoggingBucket());
+
+            $attributes = new AccountAttributes;
+            $attributes->setLoggingBucket("");
+            $this->client->setAccountAttributes($attributes);
+            $res = $this->client->getAccountAttributes();
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals("", $res->getAccountAttributes()->getLoggingBucket());
+        }
+        catch (MnsException $e)
+        {
+            $this->assertEquals($e->getMnsErrorCode(), Constants::INVALID_ARGUMENT);
         }
     }
 

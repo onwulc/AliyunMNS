@@ -1,5 +1,5 @@
 <?php
-require_once(dirname(dirname(__FILE__)).'/vendor/autoload.php');
+require_once(dirname(dirname(dirname(__FILE__))).'/mns-autoloader.php');
 
 use AliyunMNS\Client;
 use AliyunMNS\Requests\SendMessageRequest;
@@ -22,7 +22,7 @@ class CreateQueueAndSendMessage
 
     public function run()
     {
-        $queueName = "hello_world_queue-";
+        $queueName = "CreateQueueAndSendMessageExample";
 
         $this->client = new Client($this->endPoint, $this->accessId, $this->accessKey);
 
@@ -61,7 +61,9 @@ class CreateQueueAndSendMessage
         $receiptHandle = NULL;
         try
         {
-            $res = $queue->receiveMessage();
+            // when receiving messages, it's always a good practice to set the waitSeconds to be 30.
+            // it means to send one http-long-polling request which lasts 30 seconds at most.
+            $res = $queue->receiveMessage(30);
             echo "ReceiveMessage Succeed! \n";
             if (strtoupper($bodyMD5) == $res->getMessageBodyMD5())
             {
@@ -74,7 +76,7 @@ class CreateQueueAndSendMessage
             echo "ReceiveMessage Failed: " . $e;
             return;
         }
-return;
+
         // 4. delete message
         try
         {

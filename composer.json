@@ -1,8 +1,8 @@
 {
-    "name": "jita032/aliyun-mns",
+    "name": "onwulc/AliyunMNS",
     "description": "aliyun MNS official  PHP SDK for Composer ",
     "keywords": ["aliyun MNS"],
-    "homepage": "https://github.com/chiangtor/AliyunMNS",
+    "homepage": "https://github.com/onwulc/AliyunMNS",
     "type": "library",
     "require": {
          "php": ">=5.5.0",
@@ -12,8 +12,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Jarod Chiang",
-            "email": "chiangtor@gmail.com"
+            "name": "Lance",
+            "email": "onwulc@gmail.com"
         }
     ],
     "autoload": {

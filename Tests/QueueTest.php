@@ -28,9 +28,12 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->accessId = "XXXX";
-        $this->accessKey = "XXXX";
-        $this->endPoint = "XXXX";
+        $ini_array = parse_ini_file(__DIR__ . "/aliyun-mns.ini");
+
+        $this->endPoint = $ini_array["endpoint"];
+        $this->accessId = $ini_array["accessid"];
+        $this->accessKey = $ini_array["accesskey"];
+
         $this->queueToDelete = array();
 
         $this->client = new Client($this->endPoint, $this->accessId, $this->accessKey);
@@ -62,6 +65,39 @@ class QueueTest extends \PHPUnit_Framework_TestCase
         }
 
         return $this->client->getQueueRef($queueName, $base64);
+    }
+
+    public function testLoggingEnabled()
+    {
+        $queueName = "testLoggingEnabled";
+        $queue = $this->prepareQueue($queueName);
+
+        try
+        {
+            $attributes = new QueueAttributes;
+            $attributes->setLoggingEnabled(false);
+            $queue->setAttribute($attributes);
+            $res = $queue->getAttribute();
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals(false, $res->getQueueAttributes()->getLoggingEnabled());
+
+            $attributes = new QueueAttributes;
+            $attributes->setLoggingEnabled(true);
+            $queue->setAttribute($attributes);
+            $res = $queue->getAttribute();
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals(true, $res->getQueueAttributes()->getLoggingEnabled());
+
+            $attributes = new QueueAttributes;
+            $queue->setAttribute($attributes);
+            $res = $queue->getAttribute();
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals(true, $res->getQueueAttributes()->getLoggingEnabled());
+        }
+        catch (MnsException $e)
+        {
+            $this->assertTrue(FALSE, $e);
+        }
     }
 
     public function testQueueAttributes()
@@ -98,6 +134,28 @@ class QueueTest extends \PHPUnit_Framework_TestCase
             $res = $queue->getAttribute();
             $this->assertTrue($res->isSucceed());
             $this->assertEquals($res->getQueueAttributes()->getDelaySeconds(), $delaySeconds);
+        }
+        catch (MnsException $e)
+        {
+            $this->assertTrue(FALSE, $e);
+        }
+    }
+
+    public function testMessageDelaySeconds()
+    {
+        $queueName = "testMessageDelaySeconds" . uniqid();
+        $queue = $this->prepareQueue($queueName, NULL, FALSE);
+
+        $messageBody = "test";
+        $bodyMD5 = md5($messageBody);
+        $delaySeconds = 1;
+        $request = new SendMessageRequest($messageBody, $delaySeconds);
+        $receiptHandle = NULL;
+        try
+        {
+            $res = $queue->sendMessage($request);
+            $this->assertTrue($res->isSucceed());
+            $this->assertEquals(strtoupper($bodyMD5), $res->getMessageBodyMD5());
         }
         catch (MnsException $e)
         {

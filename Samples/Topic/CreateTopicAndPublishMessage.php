@@ -1,5 +1,5 @@
 <?php
-require_once(dirname(dirname(__FILE__)).'/mns-autoloader.php');
+require_once(dirname(dirname(dirname(__FILE__))).'/mns-autoloader.php');
 
 use AliyunMNS\Client;
 use AliyunMNS\Model\SubscriptionAttributes;
@@ -10,14 +10,16 @@ use AliyunMNS\Exception\MnsException;
 class CreateTopicAndPublishMessage
 {
     private $ip;
+    private $port;
     private $accessId;
     private $accessKey;
     private $endPoint;
     private $client;
 
-    public function __construct($ip, $accessId, $accessKey, $endPoint)
+    public function __construct($ip, $port, $accessId, $accessKey, $endPoint)
     {
         $this->ip = $ip;
+        $this->port = strval($port);
         $this->accessId = $accessId;
         $this->accessKey = $accessKey;
         $this->endPoint = $endPoint;
@@ -45,8 +47,8 @@ class CreateTopicAndPublishMessage
 
         // 2. subscribe
         $subscriptionName = "SubscriptionExample";
-        $attributes = new SubscriptionAttributes($subscriptionName, 'http://' . $this->ip . ':8002');
-        
+        $attributes = new SubscriptionAttributes($subscriptionName, 'http://' . $this->ip . ':' . $this->port);
+
         try
         {
             $topic->subscribe($attributes);
@@ -75,8 +77,8 @@ class CreateTopicAndPublishMessage
             return;
         }
 
-        // 4. sleep for notification
-        sleep(5);
+        // 4. sleep for receiving notification
+        sleep(20);
 
         // 5. unsubscribe
         try
@@ -108,6 +110,7 @@ $accessId = "";
 $accessKey = "";
 $endPoint = "";
 $ip = ""; //公网IP
+$port = "8000";
 
 if (empty($accessId) || empty($accessKey) || empty($endPoint))
 {
@@ -115,12 +118,8 @@ if (empty($accessId) || empty($accessKey) || empty($endPoint))
     return;
 }
 
-$pipe = popen('php httpserver4sample.php', 'w');
-sleep(3);
 
-$instance = new CreateTopicAndPublishMessage($ip, $accessId, $accessKey, $endPoint);
+$instance = new CreateTopicAndPublishMessage($ip, $port, $accessId, $accessKey, $endPoint);
 $instance->run();
-
-pclose($pipe);
 
 ?>
